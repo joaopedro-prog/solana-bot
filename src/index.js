@@ -5,7 +5,8 @@ const cors = require('cors');
 
 const auth = require('./auth/auth');
 const wallet = require('./wallet/wallet');
-const tradingBot = require('./bot/bot');
+const tradingBot = require('./bot/botObject');
+const tradeSimulator = require('./bot/simulate');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -52,10 +53,10 @@ app.post('/airdrop', async (req, res) => {
 
 // Rota para iniciar o bot
 app.post('/start-trading', (req, res) => {
-  const { wallet: walletAddress, privateKey, tokenMint } = req.body;
+  const { wallet: walletAddress, privateKey, config } = req.body;
 
-  if (!walletAddress || !privateKey || !tokenMint) {
-    return res.status(400).send("Faltam dados.");
+  if (!walletAddress || !privateKey) {
+    return res.status(400).send("Faltam dados obrigatórios (wallet e privateKey).");
   }
 
   const valid = auth.validatePrivateKey(privateKey, walletAddress);
@@ -63,11 +64,16 @@ app.post('/start-trading', (req, res) => {
     return res.status(403).send("PrivateKey não corresponde à carteira.");
   }
 
-  const started = tradingBot.createBot(walletAddress, tokenMint);
+  const started = tradingBot.createBot(walletAddress, config);
   if (started) {
-    res.send(`Bot da carteira ${walletAddress} iniciado com sucesso!`);
+    res.json({
+      message: `Bot da carteira ${walletAddress} iniciado com sucesso!`,
+      config: tradingBot.getBotStatus(walletAddress).config
+    });
   } else {
-    res.send(`Bot da carteira ${walletAddress} já está rodando.`);
+    res.status(400).json({
+      error: `Bot da carteira ${walletAddress} já está rodando.`
+    });
   }
 });
 
@@ -93,6 +99,21 @@ app.get('/status/:wallet', (req, res) => {
   res.send(status);
 });
 
+// Rota para obter tokens descobertos
+app.get('/discovered-tokens/:wallet', async (req, res) => {
+  const { wallet } = req.params;
+  
+  try {
+    const discoveredTokens = await tradingBot.getDiscoveredTokens(wallet);
+    res.json(discoveredTokens);
+  } catch (err) {
+    res.status(500).json({
+      error: 'Erro ao buscar tokens descobertos',
+      details: err.message
+    });
+  }
+});
+
 // Rota para monitorar preço
 app.get('/monitor-price', async (req, res) => {
   const { tokenMint } = req.query;
@@ -107,6 +128,32 @@ app.get('/monitor-price', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao consultar preço.', details: err.message });
   }
+});
+
+// Rota para iniciar simulação
+app.get('/start-simulating', (req, res) => {
+  const started = tradingBot.startSimulatingTrades();
+  if (started) {
+    res.json({ message: 'Simulação iniciada com sucesso!' });
+  } else {
+    res.status(400).json({ error: 'Simulação já está em andamento.' });
+  }
+});
+
+// Rota para parar simulação
+app.get('/stop-simulating', (req, res) => {
+  const stopped = tradingBot.stopSimulatingTrades();
+  if (stopped) {
+    res.json({ message: 'Simulação parada com sucesso!' });
+  } else {
+    res.status(400).json({ error: 'Simulação não estava em andamento.' });
+  }
+});
+
+// Rota para obter trades simulados
+app.get('/simulated-trades', (req, res) => {
+  const trades = tradingBot.getSimulatedTrades();
+  res.json(trades);
 });
 
 // Inicializa o servidor

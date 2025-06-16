@@ -1,0 +1,29 @@
+{
+  "1749926774317": {
+    "tokenName": "JUP",
+    "tradeAmount": 0.3,
+    "initialPrice": 0.0789,
+    "currentPrice": 0.0929,
+    "status": "pending",
+    "timestamp": "2025-06-14T18:46:14.317Z",
+    "lastUpdate": 1749926799753
+  },
+  "1749926786587": {
+    "tokenName": "SAMO",
+    "tradeAmount": 0.49,
+    "initialPrice": 0.0275,
+    "currentPrice": 0.0351,
+    "status": "pending",
+    "timestamp": "2025-06-14T18:46:26.587Z",
+    "lastUpdate": 1749926799753
+  },
+  "1749926798851": {
+    "tokenName": "RAY",
+    "tradeAmount": 0.43,
+    "initialPrice": 0.104,
+    "currentPrice": 0.0923,
+    "status": "pending",
+    "timestamp": "2025-06-14T18:46:38.851Z",
+    "lastUpdate": 1749926799753
+  }
+}
